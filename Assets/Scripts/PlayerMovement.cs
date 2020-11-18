@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private Vector2 moveLeft = new Vector2(-1.0f, 0.0f);
-    private Vector2 moveRight = new Vector2(1.0f, 0.0f);
     private Rigidbody2D prb { get; set; }
+    private SpriteRenderer spriteRenderer { get; set; }
     private bool isGrounded = false;
 
     public float PlayerSpeed = 5;
@@ -16,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     public void Start()
     {
         this.prb = GetComponent<Rigidbody2D>();
+        this.spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     // Update is called every frame
@@ -33,11 +33,11 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // TODO: Attach sprite flipping based on the direction the player is moving
+ 
     private void Move() 
     {
         float direction = Input.GetAxisRaw("Horizontal");
-        //FlipSprite(direction);
+        FlipSprite(direction);
         float movementValue = direction * this.PlayerSpeed;
         this.prb.velocity = new Vector2(movementValue, this.prb.velocity.y);
     }
@@ -52,9 +52,11 @@ public class PlayerMovement : MonoBehaviour
             this.isGrounded = false;
         }
     }
+
+    private void FlipSprite(float direction)
+    {
+        if (direction != 0)
+            this.spriteRenderer.flipX = direction >= 0;
     
-    // private void FlipSprite(float direction)
-    // {
-    //     this.gameObject.GetComponent<SpriteRenderer>().
-    // }
+    }
 }
