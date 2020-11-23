@@ -1,62 +1,51 @@
-﻿using System.Collections;
+﻿using Assets.Scripts;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : PhysicsObject
 {
-    private Rigidbody2D prb { get; set; }
-    private SpriteRenderer spriteRenderer { get; set; }
-    private bool isGrounded = false;
+    public float maxSpeed = 7;
+    public float JumpSpeed = 10;
 
-    public float PlayerSpeed = 5;
-    public float JumpForce = 5;
+    private SpriteRenderer spriteRenderer;
+    private Animator animator;
 
-    // Start is called before the first frame update
-    public void Start()
+    public void Awake()
     {
-        this.prb = GetComponent<Rigidbody2D>();
         this.spriteRenderer = GetComponent<SpriteRenderer>();
+        this.animator = GetComponent<Animator>();
     }
 
-    // Update is called every frame
-    public void Update() 
+    protected override void ComputeVelocity()
     {
-        Move();
-        Jump();
-    }
+        Vector2 move = Vector2.zero;
 
-    public void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.tag == "Ground")
+        move.x = Input.GetAxisRaw("Horizontal");
+
+        if (Input.GetButtonDown("Jump") && base.isGrounded)
         {
-            this.isGrounded = true;
+            base.velocity.y = this.JumpSpeed;
         }
-    }
-
- 
-    private void Move() 
-    {
-        float direction = Input.GetAxisRaw("Horizontal");
-        FlipSprite(direction);
-        float movementValue = direction * this.PlayerSpeed;
-        this.prb.velocity = new Vector2(movementValue, this.prb.velocity.y);
-    }
-
-    // TODO: Rewrite jump code so that it takes longer to get to the top of the jump
-    // than it does to come back down
-    private void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && this.isGrounded) 
+        // Allow the player to cancel the jump by letting go of the jump button
+        else if (Input.GetButtonUp("Jump"))
         {
-            this.prb.AddForce(new Vector2(0.0f, this.JumpForce), ForceMode2D.Impulse);
-            this.isGrounded = false;
+            if (base.velocity.y > 0)
+            {
+                base.velocity.y *= 0.5f;
+            }
         }
-    }
 
-    private void FlipSprite(float direction)
-    {
-        if (direction != 0)
-            this.spriteRenderer.flipX = direction >= 0;
-    
+        bool flipSprite = (spriteRenderer.flipX ? (move.x > 0.01f) : (move.x < 0.01f));
+        if (flipSprite)
+        {
+            this.spriteRenderer.flipX = !this.spriteRenderer.flipX;
+        }
+
+        // Set the animator properties for the animator controller state machine attached to the player
+        this.animator.SetBool("isGrounded", base.isGrounded);
+        this.animator.SetFloat("velocityX", Mathf.Abs(base.velocity.x) / maxSpeed);
+
+        base.targetVelocity = move * this.maxSpeed;
     }
 }
